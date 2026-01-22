@@ -19,6 +19,8 @@ function initNavigation() {
   const navbar = document.getElementById('navbar');
   const mobileToggle = document.getElementById('mobile-toggle');
   const navMenu = document.getElementById('nav-menu');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const sections = document.querySelectorAll('section');
 
   // Scroll effect for navbar
   window.addEventListener('scroll', () => {
@@ -36,7 +38,7 @@ function initNavigation() {
       navMenu.classList.toggle('active');
     });
 
-    navMenu.querySelectorAll('.nav-link').forEach(link => {
+    navLinks.forEach(link => {
       link.addEventListener('click', () => {
         mobileToggle.classList.remove('active');
         navMenu.classList.remove('active');
@@ -45,10 +47,11 @@ function initNavigation() {
   }
 
   // Smooth scroll for anchor links
-  document.querySelectorAll('a[href^="#"]').forEach(link => {
+  navLinks.forEach(link => {
     link.addEventListener('click', (e) => {
       const targetId = link.getAttribute('href');
-      if (targetId === '#') return;
+      // Skip external links or empty hrefs
+      if (!targetId || targetId === '#' || !targetId.startsWith('#')) return;
 
       const target = document.querySelector(targetId);
       if (target) {
@@ -63,6 +66,30 @@ function initNavigation() {
       }
     });
   });
+
+  // Scroll Spy: Active Section Highlight
+  const observerOptions = {
+    root: null,
+    rootMargin: '-20% 0px -70% 0px', // Trigger when section is near top
+    threshold: 0
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        // Remove active class from all links
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === `#${id}`) {
+            link.classList.add('active');
+          }
+        });
+      }
+    });
+  }, observerOptions);
+
+  sections.forEach(section => observer.observe(section));
 }
 
 /**
