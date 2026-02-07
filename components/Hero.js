@@ -3,10 +3,10 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 export default function Hero() {
     const [currentSlide, setCurrentSlide] = useState(0);
-    const subtitleRef = useRef(null);
 
     // Slider Logic
     useEffect(() => {
@@ -16,77 +16,42 @@ export default function Hero() {
         return () => clearInterval(interval);
     }, []);
 
-    // Typewriter Logic
-    useEffect(() => {
-        const subtitle = subtitleRef.current;
-        if (!subtitle) return;
-
-        const fullText = "Sektörde bilinen iş tecrübesi ve güvenirliliğiyle Çınar Duran Gayrimenkul, hayallerinizdeki mülklere giden yolda size özel çözüm ve hizmetler sunuyor.";
-
-        // Clear content
-        subtitle.textContent = '';
-
-        const textNode = document.createTextNode('');
-        subtitle.appendChild(textNode);
-
-        const cursor = document.createElement('span');
-        cursor.className = 'typewriter-cursor';
-        subtitle.appendChild(cursor);
-
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            textNode.nodeValue = fullText;
-            return;
-        }
-
-        const timingMap = new Float32Array(fullText.length);
-        for (let i = 0; i < fullText.length; i++) {
-            const char = fullText[i];
-            let delay = Math.random() * 35 + 25;
-            if (char === ',' || char === ';' || char === '.') delay += 80;
-            timingMap[i] = delay;
-        }
-
-        let charIndex = 0;
-        let lastFrameTime = 0;
-        let timeAccumulator = 0;
-        let requestID;
-
-        function loop(currentTime) {
-            if (!lastFrameTime) lastFrameTime = currentTime;
-            const deltaTime = Math.min(currentTime - lastFrameTime, 100);
-            lastFrameTime = currentTime;
-            timeAccumulator += deltaTime;
-
-            while (charIndex < fullText.length && timeAccumulator >= timingMap[charIndex]) {
-                timeAccumulator -= timingMap[charIndex];
-                textNode.nodeValue += fullText[charIndex];
-                charIndex++;
-            }
-
-            if (charIndex < fullText.length) {
-                requestID = requestAnimationFrame(loop);
-            } else {
-                cursor.animate([
-                    { opacity: 1 },
-                    { opacity: 0 }
-                ], {
-                    duration: 800,
-                    delay: 1500,
-                    fill: 'forwards',
-                    easing: 'ease-out'
-                });
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.15,
+                delayChildren: 0.3
             }
         }
+    };
 
-        const timer = setTimeout(() => {
-            requestID = requestAnimationFrame(loop);
-        }, 1200);
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20, filter: 'blur(10px)' },
+        visible: {
+            opacity: 1,
+            y: 0,
+            filter: 'blur(0px)',
+            transition: {
+                duration: 0.8,
+                ease: [0.16, 1, 0.3, 1] // Custom cubic-bezier for premium feel
+            }
+        }
+    };
 
-        return () => {
-            clearTimeout(timer);
-            if (requestID) cancelAnimationFrame(requestID);
-        };
-    }, []);
+    const signatureVariants = {
+        hidden: { opacity: 0, y: 15, filter: 'blur(10px)' },
+        visible: {
+            opacity: 1,
+            y: 0,
+            filter: 'blur(0px)',
+            transition: {
+                duration: 1.2,
+                ease: "easeOut"
+            }
+        }
+    };
 
     return (
         <section className="hero" id="hero">
@@ -111,27 +76,40 @@ export default function Hero() {
                 <div className="hero__vignette"></div>
             </div>
 
-            <div className="hero__content">
-                <span className="hero__eyebrow">Çiğli & İzmir</span>
+            <motion.div
+                className="hero__content"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+            >
                 <h1 className="hero__title">
-                    <span className="line"><span>Gayrimenkul</span></span>
-                    <span className="line"><span>Yatırımlarınızda</span></span>
-                    <span className="line"><span className="accent">Güvenin Adresi</span></span>
+                    <motion.span className="line" variants={signatureVariants}>Çınar Duran</motion.span>
+                    <motion.span className="line text-green" variants={itemVariants}>EMLAK VE GAYRİMENKUL</motion.span>
+                    <motion.span className="line text-white" variants={itemVariants}>DANIŞMANLIĞI</motion.span>
                 </h1>
-                <p className="hero__subtitle" ref={subtitleRef}>
-                    {/* Text is injected via JS */}
-                </p>
-                <div className="hero__cta">
-                    <a href="https://cinargayrimenkulcigli.sahibinden.com/emlak?sorting=date_desc" target="_blank"
-                        rel="noopener" className="btn btn--primary btn--large">
-                        <span>İlanları Keşfedin</span>
-                        <i className="fas fa-arrow-right"></i>
-                    </a>
-                    <a href="#contact" className="btn btn--ghost btn--large">
+                <motion.p className="hero__subtitle" variants={itemVariants}>
+                    Gayrimenkul Yatırımlarınızda Güvenin Adresi
+                </motion.p>
+                <motion.div className="hero__cta" variants={itemVariants}>
+                    <Link href="/listings">
+                        <motion.button
+                            className="hero-collab-btn"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                        >
+                            <span>Portföyümüzü Görüntüleyin</span>
+                        </motion.button>
+                    </Link>
+                    <motion.a
+                        href="#contact"
+                        className="hero-collab-btn hero-collab-btn--secondary"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                    >
                         <span>İletişime Geçin</span>
-                    </a>
-                </div>
-            </div>
+                    </motion.a>
+                </motion.div>
+            </motion.div>
         </section>
     );
 }

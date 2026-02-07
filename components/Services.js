@@ -13,7 +13,7 @@ export default function Services() {
                     <span className="section-eyebrow" data-reveal>Hizmetlerimiz</span>
                     <h2 className="section-title" data-reveal data-reveal-delay="1">Hizmet Alanlarımız</h2>
                     <p className="section-subtitle" data-reveal data-reveal-delay="2">
-                        Çiğli ve İzmir genelinde kapsamlı gayrimenkul çözümleri
+                        Çiğli ve İzmir genelinde kapsamlı gayrimenkul çözümleri sunuyoruz.
                     </p>
                 </div>
 

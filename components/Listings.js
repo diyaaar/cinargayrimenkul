@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import useScrollReveal from '../hooks/useScrollReveal';
 
 export default function Listings() {
@@ -33,12 +34,11 @@ export default function Listings() {
                                 <span><i className="fas fa-building"></i> Ticari</span>
                                 <span><i className="fas fa-map"></i> Arsa</span>
                             </div>
-                            <a href="https://cinargayrimenkulcigli.sahibinden.com/emlak?sorting=date_desc" target="_blank"
-                                rel="noopener" className="btn btn--primary btn--large"
+                            <Link href="/listings" className="btn btn--primary btn--large"
                                 style={{ width: '100%', marginTop: 'var(--space-md)' }}>
                                 <span>Tüm İlanları Görüntüle</span>
-                                <i className="fas fa-external-link-alt"></i>
-                            </a>
+                                <i className="fas fa-arrow-right"></i>
+                            </Link>
                         </div>
                     </div>
                 </div>

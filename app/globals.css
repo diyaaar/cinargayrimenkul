@@ -1,13 +1,23 @@
+/* Custom Fonts */
+@font-face {
+   font-family: 'Kalste';
+   src: url('/fonts/Kalste.otf') format('opentype');
+   font-weight: normal;
+   font-style: normal;
+   font-display: swap;
+}
+
 /* ======================================
    ÇINAR GAYRIMENKUL - MAIN STYLESHEET
    Premium Real Estate Website
    ====================================== */
 
 /* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600&family=Great+Vibes&family=DM+Serif+Display&family=Pinyon+Script&family=Alex+Brush&family=Herr+Von+Muellerhoff&display=swap');
 
 /* Import Modular CSS */
 @import 'styles/base.css';
 @import 'styles/components.css';
 @import 'styles/sections.css';
 @import 'styles/utilities.css';
+@import 'styles/listings.css';

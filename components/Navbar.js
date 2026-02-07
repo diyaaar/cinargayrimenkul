@@ -3,11 +3,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeSection, setActiveSection] = useState('hero');
+    const pathname = usePathname();
+    const router = useRouter();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -18,25 +21,33 @@ export default function Navbar() {
                 setIsScrolled(false);
             }
 
-            // Scroll Spy
-            const sections = document.querySelectorAll('section');
-            sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                const sectionHeight = section.clientHeight;
-                if (window.scrollY >= (sectionTop - 150)) {
-                    setActiveSection(section.getAttribute('id'));
-                }
-            });
+            // Scroll Spy - Only on homepage
+            if (pathname === '/') {
+                const sections = document.querySelectorAll('section');
+                sections.forEach(section => {
+                    const id = section.getAttribute('id');
+                    if (!id) return;
+                    const sectionTop = section.offsetTop;
+                    if (window.scrollY >= (sectionTop - 150)) {
+                        setActiveSection(id);
+                    }
+                });
+            }
         };
 
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    }, [pathname]);
 
     const scrollToSection = (e, id) => {
+        if (id.startsWith('http')) return; // Let default behavior handle external links
+
         e.preventDefault();
-        if (id.startsWith('http')) {
-            window.open(id, '_blank');
+
+        // If we are not on the homepage and trying to access a homepage section
+        if (pathname !== '/' && id.startsWith('#')) {
+            router.push('/' + id);
+            setIsMobileMenuOpen(false);
             return;
         }
 
@@ -53,6 +64,10 @@ export default function Navbar() {
                 behavior: 'smooth'
             });
 
+            setIsMobileMenuOpen(false);
+        } else if (id.startsWith('#')) {
+            // Fallback for cases where direct selector fails but we want to go home
+            router.push('/' + id);
             setIsMobileMenuOpen(false);
         }
     };
@@ -74,8 +89,8 @@ export default function Navbar() {
                 <ul className={`nav-menu ${isMobileMenuOpen ? 'active' : ''}`} id="nav-menu">
                     <li>
                         <a
-                            href="#hero"
-                            className={`nav-link ${activeSection === 'hero' ? 'active' : ''}`}
+                            href="/#hero"
+                            className={`nav-link ${activeSection === 'hero' && pathname === '/' ? 'active' : ''}`}
                             onClick={(e) => scrollToSection(e, '#hero')}
                         >
                             Ana Sayfa
@@ -83,27 +98,25 @@ export default function Navbar() {
                     </li>
                     <li>
                         <a
-                            href="#about"
-                            className={`nav-link ${activeSection === 'about' ? 'active' : ''}`}
+                            href="/#about"
+                            className={`nav-link ${activeSection === 'about' && pathname === '/' ? 'active' : ''}`}
                             onClick={(e) => scrollToSection(e, '#about')}
                         >
                             Hakkımızda
                         </a>
                     </li>
                     <li>
-                        <a
-                            href="https://cinargayrimenkulcigli.sahibinden.com/emlak?sorting=date_desc"
-                            target="_blank"
-                            rel="noopener"
-                            className="nav-link"
+                        <Link
+                            href="/listings"
+                            className={`nav-link ${pathname === '/listings' ? 'active' : ''}`}
                         >
-                            İlanlar
-                        </a>
+                            Portföy
+                        </Link>
                     </li>
                     <li>
                         <a
-                            href="#services"
-                            className={`nav-link ${activeSection === 'services' ? 'active' : ''}`}
+                            href="/#services"
+                            className={`nav-link ${activeSection === 'services' && pathname === '/' ? 'active' : ''}`}
                             onClick={(e) => scrollToSection(e, '#services')}
                         >
                             Hizmetler
@@ -111,8 +124,8 @@ export default function Navbar() {
                     </li>
                     <li>
                         <a
-                            href="#contact"
-                            className={`nav-link ${activeSection === 'contact' ? 'active' : ''}`}
+                            href="/#contact"
+                            className={`nav-link ${activeSection === 'contact' && pathname === '/' ? 'active' : ''}`}
                             onClick={(e) => scrollToSection(e, '#contact')}
                         >
                             İletişim

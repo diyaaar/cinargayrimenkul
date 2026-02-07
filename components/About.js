@@ -17,15 +17,15 @@ export default function About() {
         };
 
         const animateCounter = (element, target) => {
-            const duration = 2000;
+            const duration = 1200; // Faster overall duration
             const startTime = performance.now();
             const startValue = 0;
-            const easeOutQuart = (t) => 1 - Math.pow(1 - t, 4);
+            const easeOutQuad = (t) => t * (2 - t); // Less aggressive deceleration than cubic/quart
 
             const updateCounter = (currentTime) => {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
-                const easedProgress = easeOutQuart(progress);
+                const easedProgress = easeOutQuad(progress);
                 const currentValue = Math.floor(startValue + (target - startValue) * easedProgress);
 
                 element.textContent = currentValue + '+';
