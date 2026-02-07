@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function LoginPage() {
     const [email, setEmail] = useState('')
@@ -63,8 +64,19 @@ export default function LoginPage() {
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8f9fa' }}>
-            <div style={{ width: '100%', maxWidth: '400px', padding: '2rem', backgroundColor: '#ffffff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '1.5rem' }}>Admin Paneli Giriş</h1>
+            <div style={{ width: '100%', maxWidth: '500px', padding: '2rem', backgroundColor: '#ffffff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', color: '#333' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                    <div style={{ position: 'relative', width: '500px', height: '180px' }}>
+                        <Image
+                            src="/logobeyaz.svg"
+                            alt="Çınar Gayrimenkul"
+                            fill
+                            style={{ objectFit: 'contain', filter: 'invert(1) hue-rotate(180deg)' }}
+                            priority
+                        />
+                    </div>
+                </div>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '1.5rem', color: '#1a1918' }}>Admin Paneli Giriş</h1>
 
                 {error && (
                     <div style={{ padding: '0.75rem', backgroundColor: '#fff5f5', color: '#c53030', borderRadius: '4px', marginBottom: '1rem', fontSize: '0.875rem' }}>
@@ -74,24 +86,24 @@ export default function LoginPage() {
 
                 <form onSubmit={handleLogin}>
                     <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' }}>E-posta</label>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem', color: '#4a4a4a' }}>E-posta</label>
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            style={{ width: '100%', padding: '0.625rem', borderRadius: '4px', border: '1px solid #dee2e6' }}
+                            style={{ width: '100%', padding: '0.625rem', borderRadius: '4px', border: '1px solid #dee2e6', color: '#1a1918', backgroundColor: '#fff' }}
                             placeholder="admin@example.com"
                         />
                     </div>
                     <div style={{ marginBottom: '1.5rem' }}>
-                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' }}>Şifre</label>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem', color: '#4a4a4a' }}>Şifre</label>
                         <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            style={{ width: '100%', padding: '0.625rem', borderRadius: '4px', border: '1px solid #dee2e6' }}
+                            style={{ width: '100%', padding: '0.625rem', borderRadius: '4px', border: '1px solid #dee2e6', color: '#1a1918', backgroundColor: '#fff' }}
                             placeholder="••••••••"
                         />
                     </div>

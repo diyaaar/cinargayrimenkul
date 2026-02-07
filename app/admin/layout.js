@@ -14,11 +14,11 @@ export default function AdminLayout({ children }) {
                         <LogoutButton />
                         <Link href="/" title="Siteye Dön">
                             <Image
-                                src="/logosiyah.svg"
+                                src="/logobeyaz.svg"
                                 alt="Çınar Gayrimenkul Logo"
                                 width={120}
                                 height={40}
-                                style={{ height: '40px', width: 'auto', objectFit: 'contain' }}
+                                style={{ height: '40px', width: 'auto', objectFit: 'contain', filter: 'invert(1) hue-rotate(180deg)' }}
                             />
                         </Link>
                     </div>
