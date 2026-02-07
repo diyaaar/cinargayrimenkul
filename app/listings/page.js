@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import ListingsContent from './ListingsContent';
 import FilterBar from './FilterBar';
 
-export default function ListingsPage() {
+function ListingsPageContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
 
@@ -148,5 +148,13 @@ export default function ListingsPage() {
                 }
             `}</style>
         </main>
+    );
+}
+
+export default function ListingsPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-dark w-full flex items-center justify-center text-white">Yükleniyor...</div>}>
+            <ListingsPageContent />
+        </Suspense>
     );
 }
