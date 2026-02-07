@@ -58,8 +58,8 @@ export default function Hero() {
             <div className="hero__media">
                 <div className={`hero__slide ${currentSlide === 0 ? 'hero__slide--active' : ''}`} data-slide="0">
                     <Image
-                        src="/cinar1.webp"
-                        alt="Premium Gayrimenkul"
+                        src="/cinar2.webp"
+                        alt="Modern Yaşam Alanları"
                         fill
                         priority
                         style={{ objectFit: 'cover' }}
@@ -67,8 +67,8 @@ export default function Hero() {
                 </div>
                 <div className={`hero__slide ${currentSlide === 1 ? 'hero__slide--active' : ''}`} data-slide="1">
                     <Image
-                        src="/cinar2.webp"
-                        alt="Modern Yaşam Alanları"
+                        src="/cinar1.webp"
+                        alt="Premium Gayrimenkul"
                         fill
                         style={{ objectFit: 'cover' }}
                     />
