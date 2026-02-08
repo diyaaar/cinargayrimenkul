@@ -1,7 +1,5 @@
 import '../styles/admin.css';
-import Image from 'next/image';
-import Link from 'next/link';
-import LogoutButton from '@/components/admin/LogoutButton';
+import UserMenu from '@/components/admin/UserMenu';
 
 export default function AdminLayout({ children }) {
     return (
@@ -11,16 +9,7 @@ export default function AdminLayout({ children }) {
                     <h2 className="admin-topbar__title">ÇINAR GAYRİMENKUL İLAN YÖNETİMİ PANELİ</h2>
 
                     <div className="admin-topbar__user" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                        <LogoutButton />
-                        <Link href="/" title="Siteye Dön">
-                            <Image
-                                src="/logobeyaz.svg"
-                                alt="Çınar Gayrimenkul Logo"
-                                width={120}
-                                height={40}
-                                style={{ height: '40px', width: 'auto', objectFit: 'contain', filter: 'invert(1) hue-rotate(180deg)' }}
-                            />
-                        </Link>
+                        <UserMenu />
                     </div>
                 </header>
 

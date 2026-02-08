@@ -168,21 +168,33 @@
     }
 
     .nav-menu {
-        display: none;
+        display: flex;
+        flex-direction: column;
         position: absolute;
         top: 100%;
         left: 0;
         right: 0;
-        flex-direction: column;
-        background: rgba(15, 15, 15, 0.98);
+
+        /* Updated appearance */
+        background: rgba(15, 15, 15, 0.9);
         backdrop-filter: blur(16px);
         padding: var(--space-lg);
         gap: var(--space-md);
         border-bottom: 1px solid var(--color-border-light);
+
+        /* Animation */
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-8px);
+        transition: all 0.3s ease;
+        pointer-events: none;
     }
 
     .nav-menu.active {
-        display: flex;
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+        pointer-events: auto;
     }
 
     .mobile-menu-toggle {

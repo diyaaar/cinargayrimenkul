@@ -10,49 +10,56 @@ export default function ListingEditForm({ listing }) {
         manual_description: listing.manual_description || listing.description || '',
         manual_price_raw: listing.manual_price_raw || listing.price_raw || '',
         status: listing.status || 'draft',
-        features: JSON.stringify(listing.features || {}, null, 2)
+        features: listing.features || {}
     });
 
     const [isSaving, setIsSaving] = useState(false);
-    const [jsonError, setJsonError] = useState(null);
+    const [deletingKey, setDeletingKey] = useState(null);
+    const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
 
-        if (name === 'features') {
-            try {
-                JSON.parse(value);
-                setJsonError(null);
-            } catch (err) {
-                setJsonError('Geçersiz JSON formatı');
+    const handleFeatureChange = (key, value) => {
+        setFormData(prev => ({
+            ...prev,
+            features: {
+                ...prev.features,
+                [key]: value
             }
+        }));
+    };
+
+    const removeFeature = (key) => {
+        setFormData(prev => {
+            const nextFeatures = { ...prev.features };
+            delete nextFeatures[key];
+            return { ...prev, features: nextFeatures };
+        });
+    };
+
+    const addFeature = () => {
+        const newKey = prompt('Lütfen yeni özelliğin adını girin (Örn: "Isınma Tipi"):');
+        if (newKey && newKey.trim()) {
+            handleFeatureChange(newKey.trim(), '');
         }
     };
 
     const handleSave = async (e) => {
         e.preventDefault();
-
-        if (jsonError) {
-            alert('Lütfen önce JSON hatasını düzeltin.');
-            return;
-        }
-
         setIsSaving(true);
 
         try {
             const payload = {
                 listing_id: listing.listing_id,
-                status: formData.status
+                status: formData.status,
+                manual_title: formData.manual_title.trim(),
+                manual_description: formData.manual_description.trim(),
+                manual_price_raw: formData.manual_price_raw.trim(),
+                features: formData.features
             };
-
-            // Always send manual fields - empty string means "clear" (backend converts to null)
-            payload.manual_title = formData.manual_title.trim();
-            payload.manual_description = formData.manual_description.trim();
-            payload.manual_price_raw = formData.manual_price_raw.trim();
-
-            // Always include features as valid object
-            payload.features = JSON.parse(formData.features);
 
             const res = await adminFetch('/api/admin/update-listing', {
                 method: 'POST',
@@ -67,7 +74,6 @@ export default function ListingEditForm({ listing }) {
 
             alert('İlan başarıyla güncellendi.');
 
-            // Refresh listing data to show updated values
             if (data.data && data.data.length > 0) {
                 const updatedListing = data.data[0];
                 setFormData({
@@ -75,7 +81,7 @@ export default function ListingEditForm({ listing }) {
                     manual_description: updatedListing.manual_description || updatedListing.description || '',
                     manual_price_raw: updatedListing.manual_price_raw || updatedListing.price_raw || '',
                     status: updatedListing.status || 'draft',
-                    features: JSON.stringify(updatedListing.features || {}, null, 2)
+                    features: updatedListing.features || {}
                 });
             }
         } catch (err) {
@@ -88,7 +94,7 @@ export default function ListingEditForm({ listing }) {
 
     return (
         <form onSubmit={handleSave}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-xl)' }}>
+            <div className="admin-topbar-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-xl)' }}>
                 <div>
                     <Link href="/admin/listings" style={{ fontSize: '0.85rem', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}>
                         <i className="fas fa-arrow-left"></i>
@@ -96,18 +102,20 @@ export default function ListingEditForm({ listing }) {
                     </Link>
                     <h1 className="admin-topbar__title" style={{ fontSize: '1.8rem', color: 'var(--color-text)', marginBottom: '0.5rem' }}>İlanı Düzenle</h1>
                 </div>
-                <button
-                    type="submit"
-                    className="btn btn--primary"
-                    style={{ padding: '0.8rem 2rem' }}
-                    disabled={isSaving}
-                >
-                    <i className={`fas ${isSaving ? 'fa-spinner fa-spin' : 'fa-save'}`} style={{ marginRight: '8px' }}></i>
-                    {isSaving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
-                </button>
+                <div className="admin-topbar-actions">
+                    <button
+                        type="submit"
+                        className="btn btn--primary"
+                        style={{ padding: '0.8rem 2rem' }}
+                        disabled={isSaving}
+                    >
+                        <i className={`fas ${isSaving ? 'fa-spinner fa-spin' : 'fa-save'}`} style={{ marginRight: '8px' }}></i>
+                        {isSaving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+                    </button>
+                </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 'var(--space-xl)' }}>
+            <div className="admin-edit-grid" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 'var(--space-xl)' }}>
                 {/* Left Column */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
                     {/* Core Section */}
@@ -167,24 +175,207 @@ export default function ListingEditForm({ listing }) {
                     </div>
 
                     {/* Features Editor */}
-                    <div className="admin-card">
-                        <h3 className="modal-section-title" style={{ marginTop: 0 }}>Özellikler (JSON Editor)</h3>
-                        <textarea
-                            name="features"
-                            value={formData.features}
-                            onChange={handleChange}
-                            rows="15"
+                    <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
+                        <div
+                            onClick={() => setIsFeaturesOpen(!isFeaturesOpen)}
                             style={{
-                                width: '100%',
-                                padding: '10px',
-                                borderRadius: '6px',
-                                border: `1px solid ${jsonError ? '#e74c3c' : 'var(--color-border-dark)'}`,
-                                fontFamily: 'monospace',
-                                fontSize: '0.9rem',
-                                background: '#f8f9fa'
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '1.25rem 1.5rem',
+                                cursor: 'pointer',
+                                background: '#fff'
                             }}
-                        />
-                        {jsonError && <p style={{ color: '#e74c3c', fontSize: '0.8rem', marginTop: '4px' }}>{jsonError}</p>}
+                            className="features-header"
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <h3 className="modal-section-title" style={{ margin: 0 }}>İlan Özellikleri</h3>
+                                <span style={{
+                                    fontSize: '0.75rem',
+                                    color: '#aaa',
+                                    fontWeight: 400,
+                                    letterSpacing: '0.3px'
+                                }}>
+                                    ({Object.keys(formData.features).length} adet)
+                                </span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); addFeature(); }}
+                                    className="btn btn--primary"
+                                    style={{
+                                        padding: '6px 12px',
+                                        fontSize: '0.75rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px'
+                                    }}
+                                >
+                                    <i className="fas fa-plus"></i> Ekle
+                                </button>
+                                <i className={`fas fa-chevron-down toggle-icon ${isFeaturesOpen ? 'open' : ''}`} style={{
+                                    transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    color: '#ccc',
+                                    fontSize: '0.9rem'
+                                }}></i>
+                            </div>
+                        </div>
+
+                        <div
+                            className={`features-content ${isFeaturesOpen ? 'open' : ''}`}
+                            style={{
+                                padding: '0 1.5rem',
+                                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                overflow: 'hidden',
+                                maxHeight: isFeaturesOpen ? '2000px' : '0',
+                                opacity: isFeaturesOpen ? 1 : 0
+                            }}
+                        >
+                            <div style={{ paddingBottom: '1.5rem' }}>
+                                <div className="features-grid" style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                                    gap: '0.6rem'
+                                }}>
+                                    {Object.entries(formData.features).map(([key, value]) => (
+                                        <div
+                                            key={key}
+                                            style={{
+                                                padding: '12px',
+                                                borderRadius: '8px',
+                                                background: '#fff',
+                                                border: '1px solid var(--color-border)',
+                                                position: 'relative',
+                                                transition: 'all 0.2s',
+                                                boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                                                <label style={{
+                                                    display: 'block',
+                                                    fontSize: '0.65rem',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.5px',
+                                                    color: 'var(--color-primary)',
+                                                    fontWeight: 800
+                                                }}>
+                                                    {key}
+                                                </label>
+
+                                                <div style={{ position: 'relative' }}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setDeletingKey(deletingKey === key ? null : key)}
+                                                        style={{
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            color: deletingKey === key ? '#e74c3c' : '#ccc',
+                                                            cursor: 'pointer',
+                                                            fontSize: '0.8rem',
+                                                            padding: '2px',
+                                                            transition: 'color 0.2s'
+                                                        }}
+                                                        title="Sil"
+                                                    >
+                                                        <i className="fas fa-trash-alt"></i>
+                                                    </button>
+
+                                                    {/* Confirmation Popover */}
+                                                    {deletingKey === key && (
+                                                        <div style={{
+                                                            position: 'absolute',
+                                                            bottom: '100%',
+                                                            right: '0',
+                                                            marginBottom: '6px',
+                                                            background: '#e74c3c',
+                                                            color: 'white',
+                                                            padding: '3px 10px',
+                                                            borderRadius: '4px',
+                                                            fontSize: '0.7rem',
+                                                            fontWeight: 'bold',
+                                                            cursor: 'pointer',
+                                                            boxShadow: '0 4px 10px rgba(231, 76, 60, 0.2)',
+                                                            zIndex: 10,
+                                                            whiteSpace: 'nowrap'
+                                                        }}
+                                                            onClick={() => {
+                                                                removeFeature(key);
+                                                                setDeletingKey(null);
+                                                            }}
+                                                        >
+                                                            SİL
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                                <input
+                                                    type="text"
+                                                    value={value || ''}
+                                                    onChange={(e) => handleFeatureChange(key, e.target.value)}
+                                                    style={{
+                                                        flex: 1,
+                                                        background: '#f9fafb',
+                                                        border: '1px solid #e5e7eb',
+                                                        padding: '6px 10px',
+                                                        fontSize: '0.85rem',
+                                                        color: 'var(--color-text)',
+                                                        borderRadius: '5px',
+                                                        outline: 'none',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                    onFocus={(e) => {
+                                                        e.target.style.borderColor = 'var(--color-primary)';
+                                                        e.target.style.background = '#fff';
+                                                        e.target.style.boxShadow = '0 0 0 2px rgba(34, 197, 94, 0.08)';
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        e.target.style.borderColor = '#e5e7eb';
+                                                        e.target.style.background = '#f9fafb';
+                                                        e.target.style.boxShadow = 'none';
+                                                    }}
+                                                    placeholder="..."
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {Object.keys(formData.features).length === 0 && (
+                                    <div style={{ padding: '2rem', textAlign: 'center', color: '#999', fontSize: '0.9rem' }}>
+                                        Henüz özellik eklenmemiş. "Ekle" butonunu kullanarak ekleyebilirsiniz.
+                                    </div>
+                                )}
+
+                                {/* Mobile Close Button */}
+                                <div className="mobile-only-close" style={{ marginTop: '1.5rem' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsFeaturesOpen(false)}
+                                        className="close-features-btn"
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px',
+                                            borderRadius: '8px',
+                                            background: '#f8f9fa',
+                                            border: '1px solid #eee',
+                                            color: '#666',
+                                            fontSize: '0.9rem',
+                                            fontWeight: 600,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '8px',
+                                            transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        <i className="fas fa-chevron-up"></i> Özellikleri Kapat
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -205,6 +396,107 @@ export default function ListingEditForm({ listing }) {
                     </div>
                 </div>
             </div>
+
+            <style jsx>{`
+                /* Default Desktop Styles (Preserved via inline styles in JSX usually, but added here for safety) */
+                
+                /* Mobile Responsiveness */
+                @media (max-width: 768px) {
+                    /* Header Adjustments */
+                    .admin-topbar-container {
+                        flex-direction: column;
+                        align-items: flex-start !important;
+                        gap: var(--space-md);
+                    }
+                    
+                    .admin-topbar-actions {
+                        width: 100%;
+                        display: flex;
+                        justify-content: flex-end;
+                    }
+
+                    .admin-topbar-actions button {
+                        width: 100%;
+                        justify-content: center;
+                    }
+
+                    /* Main Grid Adjustments */
+                    .admin-edit-grid {
+                        grid-template-columns: 1fr !important;
+                        gap: var(--space-lg) !important;
+                    }
+
+                    /* Form Elements */
+                    .admin-input, textarea, select {
+                        font-size: 16px !important; /* Prevent zoom on iOS */
+                    }
+
+                    .features-grid {
+                        gap: 0.3rem !important;
+                    }
+
+                    .features-grid > div {
+                        padding: 6px 10px !important;
+                    }
+
+                    .features-grid input {
+                        padding: 6px 10px !important;
+                        font-size: 16px !important; /* Diğer inputlarla aynı/iOS zoom önleyici */
+                        font-weight: 400;
+                    }
+
+                    .features-grid label {
+                        margin-bottom: 2px !important;
+                        font-size: 0.85rem !important;
+                        font-weight: 600 !important;
+                        opacity: 1;
+                        color: #666;
+                    }
+
+                    .toggle-icon {
+                        display: block !important;
+                    }
+
+                    .toggle-icon.open {
+                        transform: rotate(180deg);
+                    }
+
+                    .features-content {
+                        /* display: none; Removed to allow transition */
+                    }
+
+                    .features-content.open {
+                        /* display: block; Removed */
+                    }
+
+                    .mobile-only-close {
+                        display: block !important;
+                    }
+                    
+                    .close-features-btn:hover {
+                        background: #eee !important;
+                        color: #333 !important;
+                        transform: translateY(-1px);
+                    }
+                }
+
+                .mobile-only-close {
+                    display: none;
+                }
+
+                /* Ensure desktop always shows content */
+                @media (min-width: 769px) {
+                    .features-content {
+                        display: block !important;
+                        max-height: none !important;
+                        opacity: 1 !important;
+                        overflow: visible !important;
+                    }
+                    .features-header {
+                        cursor: default !important;
+                    }
+                }
+            `}</style>
         </form>
     );
 }

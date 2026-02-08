@@ -118,6 +118,7 @@
     /* Padding for safe flourish space */
     color: white;
     letter-spacing: 0;
+    word-spacing: -0.5em;
     display: inline-block;
     white-space: nowrap;
     width: 100%;

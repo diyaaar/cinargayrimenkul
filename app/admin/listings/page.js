@@ -61,22 +61,13 @@ export default async function AdminListings() {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-xl)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <div className="section-header" style={{ marginBottom: 0 }}>
                     <h1 className="section-title" style={{ color: 'var(--color-text-dark)' }}>
                         İlan Portföyü <span style={{ fontSize: '0.6em', opacity: 0.6, marginLeft: '8px', verticalAlign: 'middle' }}>({listings.length})</span>
                     </h1>
                 </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    <button className="btn btn--primary" style={{ background: '#34495e' }}>
-                        <i className="fas fa-sync-alt" style={{ marginRight: '8px' }}></i>
-                        Yenile
-                    </button>
-                    <button className="btn btn--primary">
-                        <i className="fas fa-plus" style={{ marginRight: '8px' }}></i>
-                        Yeni İlan
-                    </button>
-                </div>
+                <div></div>
             </div>
 
             <div className="admin-card" style={{ padding: 0, overflowX: 'auto' }}>
@@ -90,9 +81,9 @@ export default async function AdminListings() {
                             <th>Şehir/İlçe</th>
                             <th>Fiyat</th>
                             <th>Durum</th>
-                            <th>Scrape</th>
+
                             <th>Güncelleme</th>
-                            <th style={{ textAlign: 'right' }}>İşlemler</th>
+                            <th style={{ textAlign: 'center' }}>İşlemler</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -148,9 +139,9 @@ export default async function AdminListings() {
                                                 );
                                             })()}
                                         </td>
-                                        <td style={{ fontSize: '0.8rem' }}>{listing.scrape_status || '---'}</td>
+
                                         <td style={{ fontSize: '0.8rem' }}>{updatedAt}</td>
-                                        <td style={{ textAlign: 'right' }}>
+                                        <td style={{ textAlign: 'center' }}>
                                             <Link
                                                 href={`/admin/listings/${listing.listing_id}`}
                                                 className="btn btn--primary"

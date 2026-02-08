@@ -15,6 +15,7 @@ export default function MediaManager({ listingId, initialMedia }) {
     const [validationErrors, setValidationErrors] = useState([]);
     const fileInputRef = useRef(null);
     const [hoveredId, setHoveredId] = useState(null);
+    const [previewIndex, setPreviewIndex] = useState(null);
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
@@ -35,6 +36,30 @@ export default function MediaManager({ listingId, initialMedia }) {
     useEffect(() => {
         setMedia(initialMedia || []);
     }, [initialMedia]);
+
+    // Handle Keyboard for Preview
+    useEffect(() => {
+        if (previewIndex === null) return;
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') setPreviewIndex(null);
+            if (e.key === 'ArrowRight') handlePreviewNav(1);
+            if (e.key === 'ArrowLeft') handlePreviewNav(-1);
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [previewIndex, sortedMedia.length]);
+
+    const handlePreviewNav = (direction) => {
+        setPreviewIndex(prev => {
+            if (prev === null) return null;
+            const newIndex = prev + direction;
+            if (newIndex < 0) return sortedMedia.length - 1;
+            if (newIndex >= sortedMedia.length) return 0;
+            return newIndex;
+        });
+    };
 
     // --- UPLOAD LOGIC ---
     const handleFileSelect = (e) => {
@@ -214,11 +239,13 @@ export default function MediaManager({ listingId, initialMedia }) {
         <div className="admin-card" style={{ padding: '0', overflow: 'hidden' }}>
             {/* Header */}
             <div style={{
-                padding: '1.5rem',
+                padding: isMobile ? '1.25rem' : '1.5rem',
                 borderBottom: '1px solid var(--color-border)',
                 display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
                 justifyContent: 'space-between',
-                alignItems: 'center',
+                alignItems: isMobile ? 'flex-start' : 'center',
+                gap: isMobile ? '1rem' : '0',
                 background: '#fafafa'
             }}>
                 <div>
@@ -228,7 +255,7 @@ export default function MediaManager({ listingId, initialMedia }) {
                     </p>
                 </div>
 
-                <div>
+                <div style={{ width: isMobile ? '100%' : 'auto' }}>
                     <input
                         type="file"
                         multiple
@@ -242,7 +269,17 @@ export default function MediaManager({ listingId, initialMedia }) {
                     <label
                         htmlFor="media-manager-upload"
                         className="btn btn--primary"
-                        style={{ cursor: uploading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                        style={{
+                            cursor: uploading ? 'wait' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: isMobile ? '0.5rem 1rem' : '0.8rem 2rem',
+                            fontSize: isMobile ? '0.85rem' : '0.9rem',
+                            width: isMobile ? '100%' : 'auto',
+                            justifyContent: 'center',
+                            borderRadius: '6px'
+                        }}
                     >
                         {uploading ? (
                             <>
@@ -251,7 +288,7 @@ export default function MediaManager({ listingId, initialMedia }) {
                             </>
                         ) : (
                             <>
-                                <i className="fas fa-cloud-upload-alt"></i>
+                                <i className="fas fa-plus-circle"></i>
                                 Medya Ekle
                             </>
                         )}
@@ -295,9 +332,9 @@ export default function MediaManager({ listingId, initialMedia }) {
             {sortedMedia.length > 0 && (
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-                    gap: '1rem',
-                    padding: '1.5rem',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                    gap: '0.75rem',
+                    padding: '1rem',
                     backgroundColor: '#fff'
                 }}>
                     <AnimatePresence>
@@ -321,21 +358,15 @@ export default function MediaManager({ listingId, initialMedia }) {
                                 }}
                                 onMouseEnter={() => setHoveredId(item.id)}
                                 onMouseLeave={() => setHoveredId(null)}
-                                onDoubleClick={() => window.open(item.url, '_blank')}
+                                onClick={() => setPreviewIndex(index)}
                             >
                                 {/* Image/Video Preview */}
                                 {item.media_type === 'video' ? (
                                     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
                                         <video src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                         <div style={{
-                                            position: 'absolute',
-                                            top: '50%',
-                                            left: '50%',
-                                            transform: 'translate(-50%, -50%)',
-                                            color: 'white',
-                                            fontSize: '2rem',
-                                            textShadow: '0 2px 4px rgba(0,0,0,0.5)',
-                                            pointerEvents: 'none'
+                                            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                                            color: 'white', fontSize: '2rem', textShadow: '0 2px 4px rgba(0,0,0,0.5)', pointerEvents: 'none'
                                         }}>
                                             <i className="fas fa-play-circle"></i>
                                         </div>
@@ -358,18 +389,21 @@ export default function MediaManager({ listingId, initialMedia }) {
                                 )}
 
                                 {/* Controls Overlay */}
-                                <div style={{
-                                    position: 'absolute',
-                                    bottom: 0, left: 0, right: 0,
-                                    background: 'rgba(0,0,0,0.7)',
-                                    backdropFilter: 'blur(4px)',
-                                    padding: '8px',
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    opacity: hoveredId === item.id || isMobile ? 1 : 0,
-                                    transition: 'opacity 0.2s ease'
-                                }}>
+                                <div
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{
+                                        position: 'absolute',
+                                        bottom: 0, left: 0, right: 0,
+                                        background: 'rgba(0,0,0,0.7)',
+                                        backdropFilter: 'blur(4px)',
+                                        padding: '8px',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        opacity: hoveredId === item.id || isMobile ? 1 : 0,
+                                        transition: 'opacity 0.2s ease'
+                                    }}
+                                >
                                     <div style={{ display: 'flex', gap: '4px' }}>
                                         <button
                                             onClick={() => handleMove(index, -1)}
@@ -405,6 +439,138 @@ export default function MediaManager({ listingId, initialMedia }) {
                     </AnimatePresence>
                 </div>
             )}
+
+            {/* Full Screen Preview Overlay */}
+            <AnimatePresence>
+                {previewIndex !== null && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setPreviewIndex(null)}
+                        style={{
+                            position: 'fixed',
+                            inset: 0,
+                            background: 'rgba(0,0,0,0.95)',
+                            zIndex: 9999,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: isMobile ? '1rem' : '3rem',
+                            backdropFilter: 'blur(10px)'
+                        }}
+                    >
+                        {/* Close Button */}
+                        <button
+                            onClick={() => setPreviewIndex(null)}
+                            style={{
+                                position: 'absolute',
+                                top: '1.5rem',
+                                right: '1.5rem',
+                                background: 'rgba(255,255,255,0.1)',
+                                border: 'none',
+                                color: 'white',
+                                width: '44px',
+                                height: '44px',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                zIndex: 10,
+                                fontSize: '1.2rem'
+                            }}
+                        >
+                            <i className="fas fa-times"></i>
+                        </button>
+
+                        <div
+                            className="preview-content"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                                position: 'relative',
+                                width: '100%',
+                                height: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={previewIndex}
+                                    initial={{ opacity: 0, scale: 0.95, x: 20 }}
+                                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95, x: -20 }}
+                                    transition={{ duration: 0.25, ease: "easeOut" }}
+                                    onClick={(e) => { e.stopPropagation(); handlePreviewNav(1); }}
+                                    style={{
+                                        maxWidth: '100%',
+                                        maxHeight: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    {sortedMedia[previewIndex].media_type === 'video' ? (
+                                        <video
+                                            src={sortedMedia[previewIndex].url}
+                                            controls
+                                            autoPlay
+                                            onClick={(e) => e.stopPropagation()} // Don't skip video when clicking its controls
+                                            style={{ maxWidth: '100%', maxHeight: '85vh', borderRadius: '8px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}
+                                        />
+                                    ) : (
+                                        <img
+                                            src={sortedMedia[previewIndex].url}
+                                            alt=""
+                                            style={{
+                                                maxWidth: '100%',
+                                                maxHeight: '85vh',
+                                                objectFit: 'contain',
+                                                borderRadius: '8px',
+                                                boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+                                            }}
+                                        />
+                                    )}
+                                </motion.div>
+                            </AnimatePresence>
+
+                            {/* Nav Buttons (Available on all devices) */}
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handlePreviewNav(-1); }}
+                                className="preview-nav-btn"
+                                style={{ position: 'absolute', left: isMobile ? '-1.5rem' : '-5rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', transition: 'background 0.2s', zIndex: 5 }}
+                            >
+                                <i className="fas fa-chevron-left"></i>
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handlePreviewNav(1); }}
+                                className="preview-nav-btn"
+                                style={{ position: 'absolute', right: isMobile ? '-1.5rem' : '-5rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', transition: 'background 0.2s', zIndex: 5 }}
+                            >
+                                <i className="fas fa-chevron-right"></i>
+                            </button>
+
+                            {/* Counter */}
+                            <div style={{
+                                position: 'absolute',
+                                bottom: '-3.5rem',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                color: 'rgba(255,255,255,0.6)',
+                                fontSize: '0.9rem',
+                                background: 'rgba(0,0,0,0.4)',
+                                padding: '6px 16px',
+                                borderRadius: '20px'
+                            }}>
+                                {previewIndex + 1} / {sortedMedia.length}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

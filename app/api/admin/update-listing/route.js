@@ -87,7 +87,7 @@ export async function POST(request) {
             }
 
             if (category) updatePayload.category = category;
-            if (listingType) updatePayload.listing_type = listingType;
+            // if (listingType) updatePayload.listing_type = listingType;
         }
 
         console.log('[Admin Update] Updating listing:', listing_id);

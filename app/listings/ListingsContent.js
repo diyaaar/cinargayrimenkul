@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function ListingsContent({ initialListings }) {
     const [selectedListing, setSelectedListing] = useState(null);
     const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+    const [isFullScreenGallery, setIsFullScreenGallery] = useState(false);
 
     // Reset index when modal opens/changes
     useEffect(() => {
@@ -187,7 +188,7 @@ export default function ListingsContent({ initialListings }) {
                         onClick={() => setSelectedListing(null)}
                     >
                         <motion.div
-                            className="modal-content"
+                            className={`modal-content ${isFullScreenGallery ? 'modal-content--fullscreen-gallery' : ''}`}
                             initial={{ scale: 0.9, y: 20, opacity: 0 }}
                             animate={{ scale: 1, y: 0, opacity: 1 }}
                             exit={{ scale: 0.9, y: 20, opacity: 0 }}
@@ -203,6 +204,28 @@ export default function ListingsContent({ initialListings }) {
                             </button>
 
                             <div className="modal-body">
+                                {/* Mobile-only Photo Strip */}
+                                <div className="modal-photo-strip-mobile">
+                                    {selectedListing.images && selectedListing.images.map((img, i) => (
+                                        <div
+                                            key={i}
+                                            className="photo-strip-item"
+                                            onClick={() => {
+                                                setCurrentMediaIndex(i);
+                                                setIsFullScreenGallery(true);
+                                            }}
+                                        >
+                                            {img.endsWith('.mp4') ? (
+                                                <div className="strip-video-preview">
+                                                    <i className="fas fa-play"></i>
+                                                </div>
+                                            ) : (
+                                                <Image src={img} alt={`Strip ${i}`} fill style={{ objectFit: 'cover' }} />
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
                                 <div className="modal-gallery">
                                     {selectedListing.images && selectedListing.images.length > 0 ? (
                                         <div className="modal-gallery-main">
@@ -215,6 +238,7 @@ export default function ListingsContent({ initialListings }) {
                                                         exit={{ opacity: 0, x: -20 }}
                                                         transition={{ duration: 0.2 }}
                                                         className="modal-gallery-media-container"
+                                                        onClick={() => setIsFullScreenGallery(true)}
                                                     >
                                                         {selectedListing.images[currentMediaIndex]?.endsWith('.mp4') ? (
                                                             <video
@@ -260,8 +284,17 @@ export default function ListingsContent({ initialListings }) {
                                                                 onClick={() => setCurrentMediaIndex(i)}
                                                             >
                                                                 {img.endsWith('.mp4') ? (
-                                                                    <div className="thumbnail-video-overlay">
-                                                                        <i className="fas fa-play"></i>
+                                                                    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                                                                        <video
+                                                                            src={`${img}#t=0.1`}
+                                                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                                            muted
+                                                                            playsInline
+                                                                            preload="metadata"
+                                                                        />
+                                                                        <div className="thumbnail-video-overlay" style={{ position: 'absolute', top: 0, left: 0, background: 'rgba(0,0,0,0.3)' }}>
+                                                                            <i className="fas fa-play"></i>
+                                                                        </div>
                                                                     </div>
                                                                 ) : (
                                                                     <Image
@@ -328,6 +361,86 @@ export default function ListingsContent({ initialListings }) {
                                 </div>
                             </div>
                         </motion.div>
+
+                        {/* Full Screen Gallery Overlay */}
+
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Full Screen Gallery Overlay - Moved outside modal-overlay to avoid stacking context issues */}
+            <AnimatePresence>
+                {isFullScreenGallery && selectedListing && (
+                    <motion.div
+                        className="fullscreen-gallery-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsFullScreenGallery(false);
+                        }}
+                    >
+                        <button
+                            className="fullscreen-close"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsFullScreenGallery(false);
+                            }}
+                        >
+                            <i className="fas fa-times"></i>
+                        </button>
+
+                        <div className="fullscreen-viewport" onClick={(e) => e.stopPropagation()}>
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={currentMediaIndex}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    className="fullscreen-image-container"
+                                >
+                                    {selectedListing.images[currentMediaIndex]?.endsWith('.mp4') ? (
+                                        <video
+                                            src={selectedListing.images[currentMediaIndex]}
+                                            controls
+                                            className="fullscreen-video"
+                                            autoPlay
+                                        />
+                                    ) : (
+                                        <Image
+                                            src={selectedListing.images[currentMediaIndex]}
+                                            alt="Full View"
+                                            fill
+                                            style={{ objectFit: 'contain' }}
+                                        />
+                                    )}
+                                </motion.div>
+                            </AnimatePresence>
+
+                            <button
+                                className="fullscreen-nav fullscreen-nav--prev"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentMediaIndex((prev) => (prev > 0 ? prev - 1 : selectedListing.images.length - 1));
+                                }}
+                            >
+                                <i className="fas fa-chevron-left"></i>
+                            </button>
+                            <button
+                                className="fullscreen-nav fullscreen-nav--next"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentMediaIndex((prev) => (prev < selectedListing.images.length - 1 ? prev + 1 : 0));
+                                }}
+                            >
+                                <i className="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+
+                        <div className="fullscreen-counter">
+                            {currentMediaIndex + 1} / {selectedListing.images.length}
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

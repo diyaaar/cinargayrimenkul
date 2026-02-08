@@ -185,20 +185,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--space-lg);
+    padding: 0;
 }
 
 .modal-content {
     background: white;
-    width: 100%;
-    max-width: 1100px;
-    max-height: 90vh;
-    border-radius: var(--radius-xl);
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
     overflow: hidden;
     position: relative;
     display: flex;
     flex-direction: column;
-    box-shadow: var(--shadow-lg);
+    box-shadow: none;
 }
 
 .modal-close {
@@ -229,7 +230,7 @@
 
 .modal-body {
     display: grid;
-    grid-template-columns: 1.2fr 1fr;
+    grid-template-columns: 620px 1fr;
     height: 100%;
     overflow: hidden;
     position: relative;
@@ -243,6 +244,7 @@
     min-height: 500px;
     display: flex;
     flex-direction: column;
+    padding-top: var(--space-sm);
 }
 
 .modal-gallery-main {
@@ -269,6 +271,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: zoom-in;
 }
 
 .modal-gallery-video {
@@ -478,11 +481,127 @@
     border-bottom: 1px solid var(--color-border-dark);
 }
 
+/* Photo Strip Mobile - ONLY visible on mobile */
+.modal-photo-strip-mobile {
+    display: none;
+    gap: 8px;
+    padding: var(--space-md);
+    overflow-x: auto;
+    background: #f8f8f8;
+    border-bottom: 1px solid var(--color-border-dark);
+}
+
+.photo-strip-item {
+    flex: 0 0 100px;
+    height: 75px;
+    position: relative;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+}
+
+.strip-video-preview {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #222;
+    color: white;
+}
+
+/* Full Screen Gallery Overlay */
+.fullscreen-gallery-overlay {
+    position: fixed;
+    inset: 0;
+    background: black;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullscreen-close {
+    position: absolute;
+    top: var(--space-xl);
+    right: var(--space-xl);
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.fullscreen-viewport {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullscreen-image-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+.fullscreen-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.fullscreen-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.fullscreen-nav--prev {
+    left: var(--space-lg);
+}
+
+.fullscreen-nav--next {
+    right: var(--space-lg);
+}
+
+.fullscreen-counter {
+    position: absolute;
+    bottom: var(--space-xl);
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: var(--font-size-small);
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 1024px) {
     .modal-body {
         grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto auto 1fr;
     }
 
     .modal-gallery {
@@ -499,8 +618,18 @@
     }
 
     .modal-content {
-        max-height: 95vh;
-        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    /* Hide standard gallery on mobile, use photo strip instead */
+    .modal-gallery {
+        display: none;
+    }
+
+    .modal-photo-strip-mobile {
+        display: flex;
     }
 
     .modal-details {
