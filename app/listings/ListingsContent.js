@@ -89,6 +89,7 @@ export default function ListingsContent({ initialListings }) {
 
         Object.entries(listing.features).forEach(([key, value]) => {
             if (value === 'Belirtilmemiş' || !value) return;
+            if (key === 'İlan No') return; // İlan No'yu gizle
 
             if (importantKeys.includes(key)) {
                 knownFields.push({ key, value });
@@ -216,8 +217,17 @@ export default function ListingsContent({ initialListings }) {
                                             }}
                                         >
                                             {img.endsWith('.mp4') ? (
-                                                <div className="strip-video-preview">
-                                                    <i className="fas fa-play"></i>
+                                                <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                                                    <video
+                                                        src={`${img}#t=0.1`}
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                        muted
+                                                        playsInline
+                                                        preload="metadata"
+                                                    />
+                                                    <div className="strip-video-preview" style={{ position: 'absolute', top: 0, left: 0, background: 'rgba(0,0,0,0.3)' }}>
+                                                        <i className="fas fa-play"></i>
+                                                    </div>
                                                 </div>
                                             ) : (
                                                 <Image src={img} alt={`Strip ${i}`} fill style={{ objectFit: 'cover' }} />
@@ -396,8 +406,16 @@ export default function ListingsContent({ initialListings }) {
                                 <motion.div
                                     key={currentMediaIndex}
                                     initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.9 }}
+                                    drag="y"
+                                    dragConstraints={{ top: 0, bottom: 0 }}
+                                    dragElastic={0.8}
+                                    onDragEnd={(e, { offset, velocity }) => {
+                                        if (offset.y > 100) {
+                                            setIsFullScreenGallery(false);
+                                        }
+                                    }}
                                     className="fullscreen-image-container"
                                 >
                                     {selectedListing.images[currentMediaIndex]?.endsWith('.mp4') ? (

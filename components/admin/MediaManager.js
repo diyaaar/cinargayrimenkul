@@ -541,14 +541,50 @@ export default function MediaManager({ listingId, initialMedia }) {
                             <button
                                 onClick={(e) => { e.stopPropagation(); handlePreviewNav(-1); }}
                                 className="preview-nav-btn"
-                                style={{ position: 'absolute', left: isMobile ? '-1.5rem' : '-5rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', transition: 'background 0.2s', zIndex: 5 }}
+                                style={{
+                                    position: 'absolute',
+                                    left: isMobile ? '0' : '-5rem',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)', // Removed translateX to strictly align left
+                                    background: 'rgba(255,255,255,0.1)',
+                                    border: 'none',
+                                    color: 'white',
+                                    width: '50px',
+                                    height: '50px',
+                                    borderRadius: '50%',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '1.2rem',
+                                    transition: 'background 0.2s',
+                                    zIndex: 5
+                                }}
                             >
                                 <i className="fas fa-chevron-left"></i>
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); handlePreviewNav(1); }}
                                 className="preview-nav-btn"
-                                style={{ position: 'absolute', right: isMobile ? '-1.5rem' : '-5rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', transition: 'background 0.2s', zIndex: 5 }}
+                                style={{
+                                    position: 'absolute',
+                                    right: isMobile ? '0' : '-5rem',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)', // Removed translateX
+                                    background: 'rgba(255,255,255,0.1)',
+                                    border: 'none',
+                                    color: 'white',
+                                    width: '50px',
+                                    height: '50px',
+                                    borderRadius: '50%',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '1.2rem',
+                                    transition: 'background 0.2s',
+                                    zIndex: 5
+                                }}
                             >
                                 <i className="fas fa-chevron-right"></i>
                             </button>

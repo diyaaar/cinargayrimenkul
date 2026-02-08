@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { adminFetch } from '@/lib/adminFetch';
 
 export default function ListingEditForm({ listing }) {
+    const [currentListing, setCurrentListing] = useState(listing);
+
     const [formData, setFormData] = useState({
         manual_title: listing.manual_title || listing.title || '',
         manual_description: listing.manual_description || listing.description || '',
@@ -76,6 +78,7 @@ export default function ListingEditForm({ listing }) {
 
             if (data.data && data.data.length > 0) {
                 const updatedListing = data.data[0];
+                setCurrentListing(updatedListing);
                 setFormData({
                     manual_title: updatedListing.manual_title || updatedListing.title || '',
                     manual_description: updatedListing.manual_description || updatedListing.description || '',
@@ -130,7 +133,7 @@ export default function ListingEditForm({ listing }) {
                                     value={formData.manual_title}
                                     onChange={handleChange}
                                     className="admin-input"
-                                    placeholder="Başlık giriniz"
+                                    placeholder={currentListing.manual_title || currentListing.title || "Başlık giriniz"}
                                     style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--color-border-dark)' }}
                                 />
                             </div>
@@ -142,7 +145,7 @@ export default function ListingEditForm({ listing }) {
                                     value={formData.manual_price_raw}
                                     onChange={handleChange}
                                     className="admin-input"
-                                    placeholder="Fiyat giriniz"
+                                    placeholder={currentListing.manual_price_raw || currentListing.price_raw || "Fiyat giriniz"}
                                     style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--color-border-dark)' }}
                                 />
                             </div>
@@ -168,7 +171,7 @@ export default function ListingEditForm({ listing }) {
                                     onChange={handleChange}
                                     rows="10"
                                     style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--color-border-dark)', resize: 'vertical' }}
-                                    placeholder="Açıklama giriniz"
+                                    placeholder={currentListing.manual_description || currentListing.description || "Açıklama giriniz"}
                                 />
                             </div>
                         </div>

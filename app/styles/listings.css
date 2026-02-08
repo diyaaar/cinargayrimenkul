@@ -615,12 +615,27 @@
     .modal-overlay {
         padding: 0;
         align-items: flex-end;
+        z-index: 9999;
+        /* Ensure it's on top of everything */
     }
 
     .modal-content {
-        height: 100vh;
-        max-height: 100vh;
+        height: 100dvh;
+        /* Use dynamic viewport height for mobile browsers */
+        max-height: 100dvh;
         border-radius: 0;
+        padding-top: env(safe-area-inset-top);
+        /* Handle notch/status bar */
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .modal-close {
+        /* Adjust close button position to account for safe area */
+        top: calc(var(--space-md) + env(safe-area-inset-top));
+        z-index: 20;
+        /* Ensure it stays above content */
+        background: rgba(255, 255, 255, 0.9);
+        /* Slightly more opaque on mobile to stand out */
     }
 
     /* Hide standard gallery on mobile, use photo strip instead */
@@ -630,10 +645,17 @@
 
     .modal-photo-strip-mobile {
         display: flex;
+        flex-shrink: 0;
+        /* Prevent strip from shrinking */
     }
 
     .modal-details {
         padding: var(--space-lg);
+        /* Ensure details scroll properly within the remaining space */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 80px;
+        /* Extra padding for bottom scrol */
     }
 
     .modal-price {
