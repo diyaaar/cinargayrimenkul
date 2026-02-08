@@ -8,9 +8,9 @@ export default function ListingEditForm({ listing }) {
     const [currentListing, setCurrentListing] = useState(listing);
 
     const [formData, setFormData] = useState({
-        manual_title: listing.manual_title || listing.title || '',
-        manual_description: listing.manual_description || listing.description || '',
-        manual_price_raw: listing.manual_price_raw || listing.price_raw || '',
+        manual_title: (listing.manual_title && listing.manual_title !== listing.title) ? listing.manual_title : '',
+        manual_description: (listing.manual_description && listing.manual_description !== listing.description) ? listing.manual_description : '',
+        manual_price_raw: (listing.manual_price_raw && listing.manual_price_raw !== listing.price_raw) ? listing.manual_price_raw : '',
         status: listing.status || 'draft',
         features: listing.features || {}
     });
@@ -80,9 +80,9 @@ export default function ListingEditForm({ listing }) {
                 const updatedListing = data.data[0];
                 setCurrentListing(updatedListing);
                 setFormData({
-                    manual_title: updatedListing.manual_title || updatedListing.title || '',
-                    manual_description: updatedListing.manual_description || updatedListing.description || '',
-                    manual_price_raw: updatedListing.manual_price_raw || updatedListing.price_raw || '',
+                    manual_title: (updatedListing.manual_title && updatedListing.manual_title !== updatedListing.title) ? updatedListing.manual_title : '',
+                    manual_description: (updatedListing.manual_description && updatedListing.manual_description !== updatedListing.description) ? updatedListing.manual_description : '',
+                    manual_price_raw: (updatedListing.manual_price_raw && updatedListing.manual_price_raw !== updatedListing.price_raw) ? updatedListing.manual_price_raw : '',
                     status: updatedListing.status || 'draft',
                     features: updatedListing.features || {}
                 });
