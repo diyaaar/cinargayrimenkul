@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { adminFetch } from '@/lib/adminFetch';
+import { AnimatePresence } from 'framer-motion';
+import Toast from '@/components/admin/Toast';
 
 export default function ListingEditForm({ listing }) {
     const [currentListing, setCurrentListing] = useState(listing);
@@ -18,6 +20,7 @@ export default function ListingEditForm({ listing }) {
     const [isSaving, setIsSaving] = useState(false);
     const [deletingKey, setDeletingKey] = useState(null);
     const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
+    const [toast, setToast] = useState(null);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -74,7 +77,7 @@ export default function ListingEditForm({ listing }) {
                 throw new Error(data.error || 'Güncelleme sırasında bir hata oluştu');
             }
 
-            alert('İlan başarıyla güncellendi.');
+            setToast({ message: 'İlan başarıyla güncellendi', type: 'success' });
 
             if (data.data && data.data.length > 0) {
                 const updatedListing = data.data[0];
@@ -89,7 +92,7 @@ export default function ListingEditForm({ listing }) {
             }
         } catch (err) {
             console.error('Save error:', err);
-            alert(`Hata: ${err.message}`);
+            setToast({ message: `Hata: ${err.message}`, type: 'error' });
         } finally {
             setIsSaving(false);
         }
@@ -500,6 +503,17 @@ export default function ListingEditForm({ listing }) {
                     }
                 }
             `}</style>
+
+            {/* Toast Notifications */}
+            <AnimatePresence>
+                {toast && (
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={() => setToast(null)}
+                    />
+                )}
+            </AnimatePresence>
         </form>
     );
 }

@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { adminFetch } from '@/lib/adminFetch';
 import { supabaseBrowser } from '@/lib/supabaseBrowser';
 import { getOptimizedImageUrl } from '@/lib/getOptimizedImageUrl';
+import Toast from './Toast';
+import ConfirmDialog from './ConfirmDialog';
 
 export default function MediaManager({ listingId, initialMedia }) {
     const router = useRouter();
@@ -19,6 +21,8 @@ export default function MediaManager({ listingId, initialMedia }) {
     const [hoveredId, setHoveredId] = useState(null);
     const [previewIndex, setPreviewIndex] = useState(null);
     const [isMobile, setIsMobile] = useState(false);
+    const [toast, setToast] = useState(null);
+    const [confirmDialog, setConfirmDialog] = useState(null);
 
     useEffect(() => {
         const handleResize = () => {
@@ -185,23 +189,31 @@ export default function MediaManager({ listingId, initialMedia }) {
 
     // --- MANAGE LOGIC ---
     const handleDelete = async (id, storagePath) => {
-        if (!confirm('Silmek istediğinize emin misiniz?')) return;
+        setConfirmDialog({
+            title: 'Medyayı Sil',
+            message: 'Bu medyayı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
+            onConfirm: async () => {
+                setConfirmDialog(null);
 
-        // Optimistic delete
-        const previousMedia = [...media];
-        setMedia(media.filter(m => m.id !== id));
+                // Optimistic delete
+                const previousMedia = [...media];
+                setMedia(media.filter(m => m.id !== id));
 
-        try {
-            const res = await adminFetch('/api/admin/media/delete', {
-                method: 'POST',
-                body: JSON.stringify({ id, storage_path: storagePath }),
-            });
-            if (!res.ok) throw new Error('Silinemedi');
-            router.refresh();
-        } catch (err) {
-            alert(err.message);
-            setMedia(previousMedia); // Revert
-        }
+                try {
+                    const res = await adminFetch('/api/admin/media/delete', {
+                        method: 'POST',
+                        body: JSON.stringify({ id, storage_path: storagePath }),
+                    });
+                    if (!res.ok) throw new Error('Silinemedi');
+                    setToast({ message: 'Medya başarıyla silindi', type: 'success' });
+                    router.refresh();
+                } catch (err) {
+                    setToast({ message: err.message, type: 'error' });
+                    setMedia(previousMedia); // Revert
+                }
+            },
+            onCancel: () => setConfirmDialog(null)
+        });
     };
 
     const handleMove = async (index, direction) => {
@@ -244,7 +256,7 @@ export default function MediaManager({ listingId, initialMedia }) {
             router.refresh();
         } catch (err) {
             console.error(err);
-            alert('Sıralama kaydedilemedi: ' + err.message);
+            setToast({ message: 'Sıralama kaydedilemedi: ' + err.message, type: 'error' });
             // Ideally revert state here, but router.refresh() might fix it next navigation
             router.refresh();
         }
@@ -622,6 +634,26 @@ export default function MediaManager({ listingId, initialMedia }) {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Toast Notifications */}
+            <AnimatePresence>
+                {toast && (
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={() => setToast(null)}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Confirm Dialog */}
+            <ConfirmDialog
+                isOpen={!!confirmDialog}
+                title={confirmDialog?.title}
+                message={confirmDialog?.message}
+                onConfirm={confirmDialog?.onConfirm}
+                onCancel={confirmDialog?.onCancel}
+            />
         </div>
     );
 }
