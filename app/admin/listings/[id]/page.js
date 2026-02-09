@@ -1,53 +1,32 @@
-
 import ListingEditForm from './ListingEditForm';
 import MediaManager from '@/components/admin/MediaManager';
 import Link from 'next/link';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { cookies, headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
 async function getListingData(id) {
     try {
-        // Fetch listing
-        const { data: listing, error: listingError } = await supabaseAdmin
-            .from('listings')
-            .select(`
-                listing_id,
-                source_url,
-                title,
-                manual_title,
-                description,
-                manual_description,
-                price_raw,
-                manual_price_raw,
-                price_value,
-                price_currency,
-                category,
-                listing_type,
-                status,
-                city,
-                district,
-                neighborhood,
-                features,
-                scrape_status,
-                last_scraped_at,
-                updated_at
-            `)
-            .eq('listing_id', id)
-            .single();
+        const cookieStore = cookies();
+        const headerList = headers();
+        const host = headerList.get('host');
+        // Construct absolute URL for server-side fetch to internal API
+        const protocol = host.includes('localhost') ? 'http' : 'https';
+        const baseUrl = `${protocol}://${host}`;
 
-        if (listingError) throw listingError;
+        const res = await fetch(`${baseUrl}/api/admin/get-listing?id=${id}`, {
+            headers: {
+                Cookie: cookieStore.toString()
+            },
+            cache: 'no-store'
+        });
 
-        // Fetch media
-        const { data: media, error: mediaError } = await supabaseAdmin
-            .from('listing_media')
-            .select('*')
-            .eq('listing_id', id)
-            .order('sort_order', { ascending: true });
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error || `API error: ${res.status}`);
+        }
 
-        if (mediaError) throw mediaError;
-
-        return { listing, media };
+        return await res.json();
     } catch (err) {
         console.error('Fetch error:', err);
         return { error: err.message };
