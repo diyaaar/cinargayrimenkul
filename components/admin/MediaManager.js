@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { adminFetch } from '@/lib/adminFetch';
+import { supabaseBrowser } from '@/lib/supabaseBrowser';
 
 export default function MediaManager({ listingId, initialMedia }) {
     const router = useRouter();
@@ -109,63 +110,76 @@ export default function MediaManager({ listingId, initialMedia }) {
         setProgress(0);
         setError(null);
 
-        const formData = new FormData();
-        formData.append('listing_id', listingId);
-        files.forEach(file => formData.append('files[]', file));
+        try {
+            const uploadedItems = [];
+            const totalFiles = files.length;
+            let completedFiles = 0;
 
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/admin/upload-media');
-        xhr.withCredentials = true;
+            for (const file of files) {
+                // Generate unique filename
+                const uuid = crypto.randomUUID();
+                const extension = file.type === 'video/mp4' ? 'mp4' : 'webp';
+                const storagePath = `listings/${listingId}/images/${uuid}.${extension}`;
 
-        xhr.upload.onprogress = (event) => {
-            if (event.lengthComputable) {
-                // Cap at 95% during upload phase, 100% will be set on load
-                const percentComplete = (event.loaded / event.total) * 95;
-                setProgress(Math.round(percentComplete));
-            }
-        };
+                // Upload to Supabase Storage
+                const { data: uploadData, error: uploadError } = await supabaseBrowser.storage
+                    .from('listings')
+                    .upload(storagePath, file);
 
-        xhr.onload = () => {
-            if (xhr.status === 200) {
-                setProgress(100); // Now set to 100%
-                const result = JSON.parse(xhr.responseText);
-                if (fileInputRef.current) fileInputRef.current.value = '';
-
-                // Add new media to state immediately
-                // Note: The API returns the uploaded rows.
-                // We should append them.
-                if (Array.isArray(result.data)) {
-                    // Update local state by adding new items
-                    // We need to account for sort_order. 
-                    // Usually API assigns next sort order. 
-                    // To be safe, we re-fetch or trust API.
-                    // For now, let's trigger refresh and wait for props update or update locally.
-
-                    // Let's assume result.data has the correct new items. 
-                    // We will merge them.
-                    setMedia(prev => [...prev, ...result.data]);
+                if (uploadError) {
+                    console.error('Storage upload error:', uploadError);
+                    throw new Error(`Failed to upload ${file.name}`);
                 }
 
-                router.refresh();
-                setUploading(false);
-                setProgress(0);
-            } else {
-                try {
-                    const res = JSON.parse(xhr.responseText);
-                    setError(res.error || 'Yükleme başarısız');
-                } catch {
-                    setError('Yükleme başarısız');
-                }
-                setUploading(false);
-            }
-        };
+                // Get public URL
+                const { data: urlData } = supabaseBrowser.storage
+                    .from('listings')
+                    .getPublicUrl(storagePath);
 
-        xhr.onerror = () => {
-            setError('Ağ hatası oluştu');
+                // Build media item
+                uploadedItems.push({
+                    listing_id: listingId,
+                    url: urlData.publicUrl,
+                    storage_path: storagePath,
+                    media_type: file.type.startsWith('video/') ? 'video' : 'image',
+                    sort_order: media.length + completedFiles + 1
+                });
+
+                // Update progress
+                completedFiles++;
+                setProgress(Math.round((completedFiles / totalFiles) * 95));
+            }
+
+            // Register media items in database
+            const res = await adminFetch('/api/admin/media/register', {
+                method: 'POST',
+                body: JSON.stringify({ items: uploadedItems })
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to register media');
+            }
+
+            const result = await res.json();
+
+            // Update state with registered items
+            if (Array.isArray(result.data)) {
+                setMedia(prev => [...prev, ...result.data]);
+            }
+
+            // Clear input and finish
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            setProgress(100);
+            router.refresh();
+
+        } catch (err) {
+            console.error('Upload error:', err);
+            setError(err.message || 'Yükleme başarısız');
+        } finally {
             setUploading(false);
-        };
-
-        xhr.send(formData);
+            setTimeout(() => setProgress(0), 1000);
+        }
     };
 
     // --- MANAGE LOGIC ---
