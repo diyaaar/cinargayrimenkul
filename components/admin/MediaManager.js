@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { adminFetch } from '@/lib/adminFetch';
 import { supabaseBrowser } from '@/lib/supabaseBrowser';
+import { getOptimizedImageUrl } from '@/lib/getOptimizedImageUrl';
 
 export default function MediaManager({ listingId, initialMedia }) {
     const router = useRouter();
@@ -386,7 +387,7 @@ export default function MediaManager({ listingId, initialMedia }) {
                                         </div>
                                     </div>
                                 ) : (
-                                    <img src={item.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img src={getOptimizedImageUrl(item.url, { width: 600, quality: 75 })} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 )}
 
                                 {/* Cover Badge */}
@@ -537,7 +538,7 @@ export default function MediaManager({ listingId, initialMedia }) {
                                         />
                                     ) : (
                                         <img
-                                            src={sortedMedia[previewIndex].url}
+                                            src={getOptimizedImageUrl(sortedMedia[previewIndex].url, { width: 1600, quality: 80 })}
                                             alt=""
                                             style={{
                                                 maxWidth: '100%',

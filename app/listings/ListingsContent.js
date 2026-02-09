@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getOptimizedImageUrl } from '@/lib/getOptimizedImageUrl';
 
 export default function ListingsContent({ initialListings }) {
     const [selectedListing, setSelectedListing] = useState(null);
@@ -126,7 +127,7 @@ export default function ListingsContent({ initialListings }) {
                                 <div className="listing-card__image-container">
                                     {listing.images && listing.images.length > 0 ? (
                                         <Image
-                                            src={listing.images[0]}
+                                            src={getOptimizedImageUrl(listing.images[0], { width: 800, quality: 75 })}
                                             alt={listing.title}
                                             fill
                                             style={{ objectFit: 'cover' }}
@@ -230,7 +231,7 @@ export default function ListingsContent({ initialListings }) {
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <Image src={img} alt={`Strip ${i}`} fill style={{ objectFit: 'cover' }} />
+                                                <Image src={getOptimizedImageUrl(img, { width: 400, quality: 75 })} alt={`Strip ${i}`} fill style={{ objectFit: 'cover' }} />
                                             )}
                                         </div>
                                     ))}
@@ -260,7 +261,7 @@ export default function ListingsContent({ initialListings }) {
                                                             />
                                                         ) : (
                                                             <Image
-                                                                src={selectedListing.images[currentMediaIndex]}
+                                                                src={getOptimizedImageUrl(selectedListing.images[currentMediaIndex], { width: 1200, quality: 80 })}
                                                                 alt={`${selectedListing.title} - ${currentMediaIndex + 1}`}
                                                                 fill
                                                                 style={{ objectFit: 'contain' }}
@@ -308,7 +309,7 @@ export default function ListingsContent({ initialListings }) {
                                                                     </div>
                                                                 ) : (
                                                                     <Image
-                                                                        src={img}
+                                                                        src={getOptimizedImageUrl(img, { width: 200, quality: 70 })}
                                                                         alt={`thumbnail ${i}`}
                                                                         fill
                                                                         style={{ objectFit: 'cover' }}
@@ -427,7 +428,7 @@ export default function ListingsContent({ initialListings }) {
                                         />
                                     ) : (
                                         <Image
-                                            src={selectedListing.images[currentMediaIndex]}
+                                            src={getOptimizedImageUrl(selectedListing.images[currentMediaIndex], { width: 1600, quality: 85 })}
                                             alt="Full View"
                                             fill
                                             style={{ objectFit: 'contain' }}
