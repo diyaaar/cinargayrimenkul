@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { requireAdmin } from '@/lib/requireAdmin';
 
+export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 /**
