@@ -231,7 +231,7 @@ export default function ListingsContent({ initialListings }) {
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <Image src={getOptimizedImageUrl(img, { width: 400, quality: 75 })} alt={`Strip ${i}`} fill style={{ objectFit: 'cover' }} />
+                                                <Image src={getOptimizedImageUrl(img, { width: 400, quality: 75 })} alt={`Strip ${i}`} fill style={{ objectFit: 'cover', pointerEvents: 'none' }} />
                                             )}
                                         </div>
                                     ))}
@@ -410,14 +410,16 @@ export default function ListingsContent({ initialListings }) {
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.9 }}
                                     drag="y"
-                                    dragConstraints={{ top: 0, bottom: 0 }}
-                                    dragElastic={0.8}
+                                    dragConstraints={{ top: -50, bottom: 300 }}
+                                    dragElastic={0.3}
                                     onDragEnd={(e, { offset, velocity }) => {
-                                        if (offset.y > 100) {
+                                        // Close if dragged down more than 100px or with high velocity
+                                        if (offset.y > 100 || velocity.y > 500) {
                                             setIsFullScreenGallery(false);
                                         }
                                     }}
                                     className="fullscreen-image-container"
+                                    style={{ touchAction: 'none' }}
                                 >
                                     {selectedListing.images[currentMediaIndex]?.endsWith('.mp4') ? (
                                         <video
@@ -431,7 +433,7 @@ export default function ListingsContent({ initialListings }) {
                                             src={getOptimizedImageUrl(selectedListing.images[currentMediaIndex], { width: 1600, quality: 85 })}
                                             alt="Full View"
                                             fill
-                                            style={{ objectFit: 'contain' }}
+                                            style={{ objectFit: 'contain', pointerEvents: 'none' }}
                                         />
                                     )}
                                 </motion.div>
