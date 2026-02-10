@@ -1,7 +1,7 @@
 /* Custom Fonts */
 @font-face {
-   font-family: 'Kalste';
-   src: url('/fonts/Kalste.otf') format('opentype');
+   font-family: 'SignatureFont';
+   src: url('/fonts/signature.otf') format('opentype');
    font-weight: normal;
    font-style: normal;
    font-display: swap;

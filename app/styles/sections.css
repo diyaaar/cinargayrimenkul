@@ -106,7 +106,7 @@
 
 /* Specific styling for 'ÇINAR DURAN' - Signature Style */
 .hero__title .line:first-child {
-    font-family: 'Kalste', cursive;
+    font-family: 'SignatureFont', cursive;
     /* User's custom font */
     text-transform: none;
     font-size: clamp(3.2rem, 14vw, 5.8rem);
