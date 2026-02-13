@@ -15,15 +15,18 @@ function ListingsPageContent() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Build a stable key from only filter/pagination params (exclude modal 'id')
+    const filterKey = (() => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete('id'); // 'id' is only for modal deep-linking, not for API
+        return params.toString();
+    })();
+
     useEffect(() => {
         async function fetchListings() {
             setLoading(true);
             try {
-                // Build query string from current URL params
-                const params = new URLSearchParams(searchParams.toString());
-                const queryString = params.toString();
-
-                const response = await fetch(`/api/listings?${queryString}`, {
+                const response = await fetch(`/api/listings?${filterKey}`, {
                     cache: 'no-store'
                 });
 
@@ -49,7 +52,7 @@ function ListingsPageContent() {
         }
 
         fetchListings();
-    }, [searchParams]);
+    }, [filterKey]);
 
     const handlePageChange = (newPage) => {
         const params = new URLSearchParams(searchParams.toString());

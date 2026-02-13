@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getOptimizedImageUrl } from '@/lib/getOptimizedImageUrl';
@@ -9,6 +9,40 @@ export default function ListingsContent({ initialListings }) {
     const [selectedListing, setSelectedListing] = useState(null);
     const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
     const [isFullScreenGallery, setIsFullScreenGallery] = useState(false);
+
+    const openListingById = useCallback((id) => {
+        if (id && initialListings) {
+            const found = initialListings.find(l => l.listing_id === id);
+            if (found) setSelectedListing(found);
+        }
+    }, [initialListings]);
+
+    const closeModal = useCallback(() => {
+        setSelectedListing(null);
+        window.history.replaceState(null, '', '/listings');
+    }, []);
+
+    // Deep-link: open modal from URL on first load
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        if (id) openListingById(id);
+    }, [openListingById]);
+
+    // Handle browser back/forward
+    useEffect(() => {
+        const onPopState = () => {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (id) {
+                openListingById(id);
+            } else {
+                setSelectedListing(null);
+            }
+        };
+        window.addEventListener('popstate', onPopState);
+        return () => window.removeEventListener('popstate', onPopState);
+    }, [openListingById]);
 
     // Reset index when modal opens/changes
     useEffect(() => {
@@ -42,7 +76,7 @@ export default function ListingsContent({ initialListings }) {
     // Close on ESC
     useEffect(() => {
         const handleEsc = (e) => {
-            if (e.key === 'Escape') setSelectedListing(null);
+            if (e.key === 'Escape') closeModal();
         };
         window.addEventListener('keydown', handleEsc);
         return () => window.removeEventListener('keydown', handleEsc);
@@ -117,7 +151,10 @@ export default function ListingsContent({ initialListings }) {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1 }}
-                                onClick={() => setSelectedListing(listing)}
+                                onClick={() => {
+                                    setSelectedListing(listing);
+                                    window.history.pushState(null, '', `/listings?id=${listing.listing_id}`);
+                                }}
                             >
                                 <div className="listing-card__category">
                                     {listing.listing_category === 'isyeri' ? 'İŞYERİ' :
@@ -187,7 +224,7 @@ export default function ListingsContent({ initialListings }) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={() => setSelectedListing(null)}
+                        onClick={closeModal}
                     >
                         <motion.div
                             className={`modal-content ${isFullScreenGallery ? 'modal-content--fullscreen-gallery' : ''}`}
@@ -199,7 +236,7 @@ export default function ListingsContent({ initialListings }) {
                         >
                             <button
                                 className="modal-close"
-                                onClick={() => setSelectedListing(null)}
+                                onClick={closeModal}
                                 aria-label="Kapat"
                             >
                                 <i className="fas fa-times"></i>
