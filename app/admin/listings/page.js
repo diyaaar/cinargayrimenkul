@@ -67,7 +67,9 @@ export default async function AdminListings() {
                         İlan Portföyü <span style={{ fontSize: '0.6em', opacity: 0.6, marginLeft: '8px', verticalAlign: 'middle' }}>({listings.length})</span>
                     </h1>
                 </div>
-                <div></div>
+                <Link href="/admin/listings/new" className="btn btn--primary">
+                    Yeni İlan
+                </Link>
             </div>
 
             <div className="admin-card" style={{ padding: 0, overflowX: 'auto' }}>

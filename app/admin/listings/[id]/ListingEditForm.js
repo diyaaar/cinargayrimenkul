@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { adminFetch } from '@/lib/adminFetch';
 import { AnimatePresence } from 'framer-motion';
 import Toast from '@/components/admin/Toast';
 
 export default function ListingEditForm({ listing }) {
+    const router = useRouter();
     const [currentListing, setCurrentListing] = useState(listing);
 
     const [formData, setFormData] = useState({
@@ -19,12 +21,19 @@ export default function ListingEditForm({ listing }) {
 
     const [isSaving, setIsSaving] = useState(false);
     const [deletingKey, setDeletingKey] = useState(null);
-    const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
+    const [selectedPreset, setSelectedPreset] = useState('');
     const [toast, setToast] = useState(null);
+    const [isFeaturesOpen, setIsFeaturesOpen] = useState(true);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isAddingCustom, setIsAddingCustom] = useState(false);
+    const [customKey, setCustomKey] = useState('');
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
     const handleFeatureChange = (key, value) => {
@@ -39,17 +48,44 @@ export default function ListingEditForm({ listing }) {
 
     const removeFeature = (key) => {
         setFormData(prev => {
-            const nextFeatures = { ...prev.features };
-            delete nextFeatures[key];
-            return { ...prev, features: nextFeatures };
+            const next = { ...prev.features };
+            delete next[key];
+            return { ...prev, features: next };
         });
     };
 
-    const addFeature = () => {
-        const newKey = prompt('Lütfen yeni özelliğin adını girin (Örn: "Isınma Tipi"):');
-        if (newKey && newKey.trim()) {
-            handleFeatureChange(newKey.trim(), '');
+    const FEATURE_PRESETS = [
+        "Oda Sayısı",
+        "m² (Net)",
+        "m² (Brüt)",
+        "m²",
+        "Kapalı Alan (m2)",
+        "Emlak Tipi",
+        "Durumu",
+        "Kategori"
+    ];
+
+    const addPresetFeature = () => {
+        if (!selectedPreset) return;
+        if (!formData.features[selectedPreset]) {
+            handleFeatureChange(selectedPreset, '');
+            setToast({ message: `${selectedPreset} eklendi`, type: 'success', duration: 2000 });
+        } else {
+            setToast({ message: 'Bu özellik zaten ekli', type: 'warning', duration: 2000 });
         }
+        setSelectedPreset('');
+    };
+
+    const saveCustomFeature = () => {
+        if (!customKey.trim()) return;
+        if (formData.features[customKey.trim()]) {
+            setToast({ message: 'Bu özellik zaten ekli', type: 'warning', duration: 2000 });
+            return;
+        }
+        handleFeatureChange(customKey.trim(), '');
+        setCustomKey('');
+        setIsAddingCustom(false);
+        setToast({ message: `${customKey} eklendi`, type: 'success', duration: 2000 });
     };
 
     const handleSave = async (e) => {
@@ -98,6 +134,33 @@ export default function ListingEditForm({ listing }) {
         }
     };
 
+    const handleDelete = async () => {
+        try {
+            const res = await adminFetch('/api/admin/delete-listing', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ listing_id: listing.listing_id })
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Silme işlemi başarısız');
+            }
+
+            setShowDeleteConfirm(false);
+            setToast({ message: 'İlan başarıyla silindi', type: 'success' });
+
+            setTimeout(() => {
+                router.push('/admin/listings');
+            }, 1000);
+
+        } catch (err) {
+            console.error('Delete error:', err);
+            setToast({ message: `Hata: ${err.message}`, type: 'error' });
+            setShowDeleteConfirm(false);
+        }
+    };
+
     return (
         <form onSubmit={handleSave}>
             <div className="admin-topbar-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-xl)' }}>
@@ -108,7 +171,27 @@ export default function ListingEditForm({ listing }) {
                     </Link>
                     <h1 className="admin-topbar__title" style={{ fontSize: '1.8rem', color: 'var(--color-text)', marginBottom: '0.5rem' }}>İlanı Düzenle</h1>
                 </div>
-                <div className="admin-topbar-actions">
+                <div className="admin-topbar-actions" style={{ display: 'flex', gap: '1rem' }}>
+                    <button
+                        type="button"
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="btn btn--danger"
+                        style={{
+                            padding: '0.8rem 1.5rem',
+                            backgroundColor: '#dc3545',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                        }}
+                        disabled={isSaving}
+                    >
+                        <i className="fas fa-trash-alt"></i> Sil
+                    </button>
                     <button
                         type="submit"
                         className="btn btn--primary"
@@ -190,7 +273,8 @@ export default function ListingEditForm({ listing }) {
                                 alignItems: 'center',
                                 padding: '1.25rem 1.5rem',
                                 cursor: 'pointer',
-                                background: '#fff'
+                                background: '#fff',
+                                borderBottom: isFeaturesOpen ? '1px solid var(--color-border)' : 'none'
                             }}
                             className="features-header"
                         >
@@ -206,20 +290,6 @@ export default function ListingEditForm({ listing }) {
                                 </span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <button
-                                    type="button"
-                                    onClick={(e) => { e.stopPropagation(); addFeature(); }}
-                                    className="btn btn--primary"
-                                    style={{
-                                        padding: '6px 12px',
-                                        fontSize: '0.75rem',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '4px'
-                                    }}
-                                >
-                                    <i className="fas fa-plus"></i> Ekle
-                                </button>
                                 <i className={`fas fa-chevron-down toggle-icon ${isFeaturesOpen ? 'open' : ''}`} style={{
                                     transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                                     color: '#ccc',
@@ -231,13 +301,120 @@ export default function ListingEditForm({ listing }) {
                         <div
                             className={`features-content ${isFeaturesOpen ? 'open' : ''}`}
                             style={{
-                                padding: '0 1.5rem',
+                                padding: '1.5rem',
                                 transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                                 overflow: 'hidden',
                                 maxHeight: isFeaturesOpen ? '2000px' : '0',
                                 opacity: isFeaturesOpen ? 1 : 0
                             }}
                         >
+                            {/* Feature Adding Toolbar */}
+                            <div style={{
+                                display: 'flex',
+                                gap: '8px',
+                                marginBottom: '1.5rem',
+                                padding: '10px',
+                                background: '#f8f9fa',
+                                borderRadius: '8px',
+                                flexWrap: 'wrap',
+                                alignItems: 'center'
+                            }} onClick={e => e.stopPropagation()}>
+                                <select
+                                    value={selectedPreset}
+                                    onChange={(e) => setSelectedPreset(e.target.value)}
+                                    style={{
+                                        padding: '8px',
+                                        borderRadius: '6px',
+                                        border: '1px solid #ddd',
+                                        fontSize: '0.85rem',
+                                        minWidth: '150px'
+                                    }}
+                                >
+                                    <option value="">Özellik Seç...</option>
+                                    {FEATURE_PRESETS.map(preset => (
+                                        <option key={preset} value={preset} disabled={!!formData.features[preset]}>
+                                            {preset} {formData.features[preset] ? '(Ekli)' : ''}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                <button
+                                    type="button"
+                                    onClick={addPresetFeature}
+                                    className="btn btn--primary"
+                                    style={{ padding: '8px 16px', fontSize: '0.8rem' }}
+                                    disabled={!selectedPreset}
+                                >
+                                    <i className="fas fa-plus"></i> Ekle
+                                </button>
+
+                                <div style={{ width: '1px', height: '20px', background: '#ddd', margin: '0 8px' }}></div>
+
+                                {isAddingCustom ? (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <input
+                                            type="text"
+                                            value={customKey}
+                                            onChange={(e) => setCustomKey(e.target.value)}
+                                            placeholder="Özellik adı..."
+                                            autoFocus
+                                            className="admin-input"
+                                            style={{
+                                                padding: '8px',
+                                                borderRadius: '6px',
+                                                border: '1px solid var(--color-primary)',
+                                                fontSize: '0.85rem',
+                                                width: '150px'
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    saveCustomFeature();
+                                                }
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={saveCustomFeature}
+                                            className="btn btn--primary"
+                                            style={{ padding: '8px 12px', fontSize: '0.8rem' }}
+                                        >
+                                            <i className="fas fa-check"></i>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsAddingCustom(false);
+                                                setCustomKey('');
+                                            }}
+                                            className="btn"
+                                            style={{
+                                                padding: '8px 12px',
+                                                fontSize: '0.8rem',
+                                                background: '#eee',
+                                                color: '#666'
+                                            }}
+                                        >
+                                            <i className="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAddingCustom(true)}
+                                        className="btn"
+                                        style={{
+                                            padding: '8px 16px',
+                                            fontSize: '0.8rem',
+                                            background: 'transparent',
+                                            border: '1px solid var(--color-primary)',
+                                            color: 'var(--color-primary)'
+                                        }}
+                                    >
+                                        <i className="fas fa-edit"></i> Özel Özellik Ekle
+                                    </button>
+                                )}
+                            </div>
                             <div style={{ paddingBottom: '1.5rem' }}>
                                 <div className="features-grid" style={{
                                     display: 'grid',
@@ -404,7 +581,7 @@ export default function ListingEditForm({ listing }) {
             </div>
 
             <style jsx>{`
-                /* Default Desktop Styles (Preserved via inline styles in JSX usually, but added here for safety) */
+                /* Default Desktop Styles */
                 
                 /* Mobile Responsiveness */
                 @media (max-width: 768px) {
@@ -447,7 +624,7 @@ export default function ListingEditForm({ listing }) {
 
                     .features-grid input {
                         padding: 6px 10px !important;
-                        font-size: 16px !important; /* Diğer inputlarla aynı/iOS zoom önleyici */
+                        font-size: 16px !important;
                         font-weight: 400;
                     }
 
@@ -465,14 +642,6 @@ export default function ListingEditForm({ listing }) {
 
                     .toggle-icon.open {
                         transform: rotate(180deg);
-                    }
-
-                    .features-content {
-                        /* display: none; Removed to allow transition */
-                    }
-
-                    .features-content.open {
-                        /* display: block; Removed */
                     }
 
                     .mobile-only-close {
@@ -514,6 +683,52 @@ export default function ListingEditForm({ listing }) {
                     />
                 )}
             </AnimatePresence>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '2rem',
+                        borderRadius: '8px',
+                        maxWidth: '400px',
+                        width: '90%',
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                    }}>
+                        <h3 style={{ marginTop: 0, color: 'var(--color-text)' }}>İlanı Sil</h3>
+                        <p style={{ color: 'var(--color-text)' }}>Bu ilan silinecek. Devam etmek istiyor musunuz?</p>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
+                            <button
+                                type="button"
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="btn"
+                                style={{ padding: '0.6rem 1.2rem', cursor: 'pointer', border: '1px solid #ddd', background: '#fff' }}
+                            >
+                                İptal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleDelete}
+                                className="btn"
+                                style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                                Evet, Sil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </form>
     );
 }
