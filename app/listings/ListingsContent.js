@@ -444,15 +444,28 @@ export default function ListingsContent({ initialListings }) {
                                 <motion.div
                                     key={currentMediaIndex}
                                     initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.9 }}
-                                    drag="y"
-                                    dragConstraints={{ top: -50, bottom: 300 }}
-                                    dragElastic={0.3}
+                                    drag
+                                    dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
+                                    dragElastic={0.8} // More elastic for better swipe feel
                                     onDragEnd={(e, { offset, velocity }) => {
-                                        // Close if dragged down more than 100px or with high velocity
-                                        if (offset.y > 100 || velocity.y > 500) {
+                                        const swipeConfidenceThreshold = 10000;
+                                        const swipePowerX = Math.abs(offset.x) * velocity.x;
+                                        const swipePowerY = Math.abs(offset.y) * velocity.y;
+
+                                        // Vertical swipe (Down) -> Close
+                                        // Check if vertical movement dominates and is downward
+                                        if (offset.y > 100 && Math.abs(offset.y) > Math.abs(offset.x)) {
                                             setIsFullScreenGallery(false);
+                                        }
+                                        // Horizontal swipe -> Change Image
+                                        else if (swipePowerX < -swipeConfidenceThreshold) {
+                                            // Swipe Left -> Next Image
+                                            setCurrentMediaIndex((prev) => (prev < selectedListing.images.length - 1 ? prev + 1 : 0));
+                                        } else if (swipePowerX > swipeConfidenceThreshold) {
+                                            // Swipe Right -> Prev Image
+                                            setCurrentMediaIndex((prev) => (prev > 0 ? prev - 1 : selectedListing.images.length - 1));
                                         }
                                     }}
                                     className="fullscreen-image-container"
