@@ -79,8 +79,6 @@ export default function MediaManager({ listingId, initialMedia }) {
         const validFiles = [];
         const errors = [];
         const MAX_FILES = 20;
-        const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
-        const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
         const ALLOWED_TYPES = ['image/webp', 'image/jpeg', 'image/png', 'video/mp4'];
 
         if (selectedFiles.length > MAX_FILES) {
@@ -92,14 +90,7 @@ export default function MediaManager({ listingId, initialMedia }) {
                 errors.push(`${file.name}: Geçersiz format.`);
                 return;
             }
-            if (file.type.startsWith('image/') && file.size > MAX_IMAGE_SIZE) {
-                errors.push(`${file.name}: Boyut 5MB'ı aşıyor.`);
-                return;
-            }
-            if (file.type.startsWith('video/') && file.size > MAX_VIDEO_SIZE) {
-                errors.push(`${file.name}: Boyut 50MB'ı aşıyor.`);
-                return;
-            }
+            // Size checks removed
             validFiles.push(file);
         });
 

@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/requireAdmin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 300;
 
 /**
  * POST /api/admin/media/register

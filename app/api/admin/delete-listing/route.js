@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 300; // 5 minutes constraint removal
 export const runtime = 'nodejs';
 
 export async function POST(request) {
