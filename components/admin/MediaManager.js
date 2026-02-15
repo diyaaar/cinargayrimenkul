@@ -78,19 +78,13 @@ export default function MediaManager({ listingId, initialMedia }) {
     const validateAndUpload = async (selectedFiles) => {
         const validFiles = [];
         const errors = [];
-        const MAX_FILES = 20;
         const ALLOWED_TYPES = ['image/webp', 'image/jpeg', 'image/png', 'video/mp4'];
 
-        if (selectedFiles.length > MAX_FILES) {
-            errors.push(`Maksimum ${MAX_FILES} dosya seçebilirsiniz.`);
-        }
-
-        selectedFiles.slice(0, MAX_FILES).forEach(file => {
+        selectedFiles.forEach(file => {
             if (!ALLOWED_TYPES.includes(file.type)) {
                 errors.push(`${file.name}: Geçersiz format.`);
                 return;
             }
-            // Size checks removed
             validFiles.push(file);
         });
 
