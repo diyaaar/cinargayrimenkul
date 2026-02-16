@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getOptimizedImageUrl } from '@/lib/getOptimizedImageUrl';
@@ -9,6 +9,8 @@ export default function ListingsContent({ initialListings }) {
     const [selectedListing, setSelectedListing] = useState(null);
     const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
     const [isFullScreenGallery, setIsFullScreenGallery] = useState(false);
+    const mobileStripRef = useRef(null);
+    const desktopThumbnailsRef = useRef(null);
 
     const openListingById = useCallback((id) => {
         if (id && initialListings) {
@@ -49,6 +51,35 @@ export default function ListingsContent({ initialListings }) {
         setCurrentMediaIndex(0);
     }, [selectedListing]);
 
+    // Scroll active thumbnail/strip item into view
+    useEffect(() => {
+        if (!selectedListing) return;
+
+        // Mobile Strip
+        if (mobileStripRef.current) {
+            const activeItem = mobileStripRef.current.children[currentMediaIndex];
+            if (activeItem) {
+                activeItem.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'center'
+                });
+            }
+        }
+
+        // Desktop Thumbnails
+        if (desktopThumbnailsRef.current) {
+            const activeItem = desktopThumbnailsRef.current.children[currentMediaIndex];
+            if (activeItem) {
+                activeItem.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'center'
+                });
+            }
+        }
+    }, [currentMediaIndex, selectedListing]);
+
     // Debug: Log what data we receive
     useEffect(() => {
         console.log('[ListingsContent] Received listings count:', initialListings?.length || 0);
@@ -74,13 +105,26 @@ export default function ListingsContent({ initialListings }) {
     }, [selectedListing]);
 
     // Close on ESC
+    // Keyboard Navigation
     useEffect(() => {
-        const handleEsc = (e) => {
-            if (e.key === 'Escape') closeModal();
+        const handleKeyDown = (e) => {
+            if (!selectedListing) return;
+
+            if (e.key === 'Escape') {
+                if (isFullScreenGallery) {
+                    setIsFullScreenGallery(false);
+                } else {
+                    closeModal();
+                }
+            } else if (e.key === 'ArrowLeft') {
+                setCurrentMediaIndex((prev) => (prev > 0 ? prev - 1 : selectedListing.images.length - 1));
+            } else if (e.key === 'ArrowRight') {
+                setCurrentMediaIndex((prev) => (prev < selectedListing.images.length - 1 ? prev + 1 : 0));
+            }
         };
-        window.addEventListener('keydown', handleEsc);
-        return () => window.removeEventListener('keydown', handleEsc);
-    }, []);
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [selectedListing, isFullScreenGallery, closeModal]);
 
     const getSummaryFields = (listing) => {
         const summary = [];
@@ -244,7 +288,7 @@ export default function ListingsContent({ initialListings }) {
 
                             <div className="modal-body">
                                 {/* Mobile-only Photo Strip */}
-                                <div className="modal-photo-strip-mobile">
+                                <div className="modal-photo-strip-mobile" ref={mobileStripRef}>
                                     {selectedListing.images && selectedListing.images.map((img, i) => (
                                         <div
                                             key={i}
@@ -324,7 +368,7 @@ export default function ListingsContent({ initialListings }) {
                                                         <i className="fas fa-chevron-right"></i>
                                                     </button>
 
-                                                    <div className="gallery-thumbnails">
+                                                    <div className="gallery-thumbnails" ref={desktopThumbnailsRef}>
                                                         {selectedListing.images.map((img, i) => (
                                                             <div
                                                                 key={i}
